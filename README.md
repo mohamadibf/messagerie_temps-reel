@@ -126,21 +126,6 @@ messagerie_temps_reel/
     ├── package.json
     ├── .env                       # VITE_API_URL configuration
     └── vite.config.ts
-```
-
-    │   │   └── useWebSocket.ts    # Hook WebSocket custom
-    │   ├── services/
-    │   │   └── api.ts             # Client API (refine, suggest)
-    │   ├── types/
-    │   │   └── index.ts           # Interfaces TS (User, Message)
-    │   ├── lib/
-    │   │   ├── utils.ts           # cn() helper
-    │   │   └── imageUtils.ts      # getImageUrl() helper
-    │   ├── App.tsx
-    │   └── main.tsx
-    ├── index.html
-    ├── package.json
-    └── vite.config.ts
 
 ````
 
@@ -217,7 +202,7 @@ python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - **Swagger UI** : http://localhost:8000/docs
 - **ReDoc** : http://localhost:8000/redoc
 
-### 🎨 Configuration Frontend
+### Configuration Frontend
 
 1. **Naviguer vers le dossier frontend** :
 
@@ -442,7 +427,7 @@ MIT License - Libre d'utilisation pour projets personnels et commerciaux.
 
 ## 👨‍💻 Auteur
 
-**MOhamadi OUEDRAOGO**
+**Mohamadi OUEDRAOGO**
 
 - 🎓 Test technique - Messagerie temps réel
 - 📧 Contact : ouedraogomohamadi223@gmail.com
