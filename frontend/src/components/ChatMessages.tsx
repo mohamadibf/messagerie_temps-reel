@@ -6,14 +6,12 @@ import { Loader2 } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const ChatMessages = () => {
-  const {
-    messages,
-    isLoading,
-    currentUser,
-    selectedContact,
-    setMessages,
-    token,
-  } = useChatStore();
+  const messages = useChatStore((s) => s.messages);
+  const isLoading = useChatStore((s) => s.isLoading);
+  const currentUser = useChatStore((s) => s.currentUser);
+  const selectedContact = useChatStore((s) => s.selectedContact);
+  const setMessages = useChatStore((s) => s.setMessages);
+  const token = useChatStore((s) => s.token);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Charger l'historique des messages

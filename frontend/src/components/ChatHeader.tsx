@@ -6,7 +6,8 @@ import { useChatStore } from "@/store/chatStore";
 import { useEffect, useState } from "react";
 
 export const ChatHeader = () => {
-  const { isConnected, selectedContact } = useChatStore();
+  const isConnected = useChatStore((s) => s.isConnected);
+  const selectedContact = useChatStore((s) => s.selectedContact);
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {

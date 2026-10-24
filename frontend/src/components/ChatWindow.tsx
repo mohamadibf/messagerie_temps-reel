@@ -5,7 +5,7 @@ import { ContactList } from "./ContactList";
 import { useChatStore } from "@/store/chatStore";
 
 export const ChatWindow = () => {
-  const { selectedContact } = useChatStore();
+  const selectedContact = useChatStore((s) => s.selectedContact);
 
   return (
     <div className="h-screen bg-linear-to-br from-background via-accent/40 to-background flex">

@@ -19,15 +19,14 @@ import type { Attachment } from "@/types";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export const ChatInput = () => {
-  const {
-    inputValue,
-    setInputValue,
-    messages,
-    setLoading,
-    suggestions,
-    setSuggestions,
-  } = useChatStore();
-  const { sendMessage, isConnected } = useWebSocket();
+  const inputValue = useChatStore((s) => s.inputValue);
+  const setInputValue = useChatStore((s) => s.setInputValue);
+  const messages = useChatStore((s) => s.messages);
+  const setLoading = useChatStore((s) => s.setLoading);
+  const suggestions = useChatStore((s) => s.suggestions);
+  const setSuggestions = useChatStore((s) => s.setSuggestions);
+  const isConnected = useChatStore((s) => s.isConnected);
+  const { sendMessage } = useWebSocket();
   const [isAILoading, setIsAILoading] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);

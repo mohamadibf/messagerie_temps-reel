@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Download, FileText } from "lucide-react";
 import type { Message } from "@/store/chatStore";
 import { useChatStore } from "@/store/chatStore";
@@ -20,8 +21,10 @@ const formatSize = (bytes?: number | null) => {
 const EMOJI_ONLY =
   /^(?:\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*){1,3}$/u;
 
-export const ChatBubble = ({ message }: ChatBubbleProps) => {
-  const { currentUser } = useChatStore();
+export const ChatBubble = memo(function ChatBubble({
+  message,
+}: ChatBubbleProps) {
+  const currentUser = useChatStore((s) => s.currentUser);
   const isCurrentUser = message.sender_id === currentUser?.id;
 
   const attachmentUrl = message.attachment_url
@@ -134,4 +137,4 @@ export const ChatBubble = ({ message }: ChatBubbleProps) => {
       )}
     </div>
   );
-};
+});

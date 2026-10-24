@@ -10,15 +10,13 @@ import { getImageUrl } from "@/lib/imageUtils";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const ContactList = () => {
-  const {
-    currentUser,
-    contacts,
-    setContacts,
-    selectedContact,
-    setSelectedContact,
-    logout,
-    token,
-  } = useChatStore();
+  const currentUser = useChatStore((s) => s.currentUser);
+  const contacts = useChatStore((s) => s.contacts);
+  const setContacts = useChatStore((s) => s.setContacts);
+  const selectedContact = useChatStore((s) => s.selectedContact);
+  const setSelectedContact = useChatStore((s) => s.setSelectedContact);
+  const logout = useChatStore((s) => s.logout);
+  const token = useChatStore((s) => s.token);
   const [loading, setLoading] = useState(true);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
