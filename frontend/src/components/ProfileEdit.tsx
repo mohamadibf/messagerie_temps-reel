@@ -16,7 +16,7 @@ export const ProfileEdit = ({ onClose }: ProfileEditProps) => {
   const { currentUser, setCurrentUser, token } = useChatStore();
   const [username, setUsername] = useState(currentUser?.username || "");
   const [email, setEmail] = useState(currentUser?.email || "");
-  const [profilePhoto, setProfilePhoto] = useState(
+  const [profilePhoto] = useState(
     currentUser?.profile_photo || "",
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

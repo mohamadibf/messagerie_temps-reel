@@ -1,4 +1,3 @@
-import { Card } from "./ui/card";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";

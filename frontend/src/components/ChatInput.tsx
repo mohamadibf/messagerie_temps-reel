@@ -40,7 +40,7 @@ export const ChatInput = () => {
 
     try {
       // Convertir les messages au format attendu par l'API
-      const { currentUser, selectedContact } = useChatStore.getState();
+      const { currentUser } = useChatStore.getState();
       const historyForAPI = messages.map((m) => ({
         content: m.content,
         sender: m.sender_id === currentUser?.id ? "user" : "contact",
