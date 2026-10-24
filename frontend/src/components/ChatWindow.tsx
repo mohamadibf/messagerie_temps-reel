@@ -8,7 +8,7 @@ export const ChatWindow = () => {
   const { selectedContact } = useChatStore();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-linear-to-br from-background via-accent/40 to-background flex">
       <ContactList />
       <div className="flex-1 flex flex-col h-screen">
         {selectedContact ? (

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useChatStore } from "../store/chatStore";
 import type { Message } from "../store/chatStore";
+import type { Attachment } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const WS_URL = API_URL.replace("http://", "ws://").replace(
@@ -84,7 +85,7 @@ export const useWebSocket = () => {
   }, []);
 
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, attachment?: Attachment) => {
       if (!currentUser?.id || !selectedContact?.id) return false;
 
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -97,6 +98,10 @@ export const useWebSocket = () => {
           timestamp,
           username: currentUser.username,
           profile_photo: currentUser.profile_photo,
+          attachment_url: attachment?.url,
+          attachment_name: attachment?.name,
+          attachment_type: attachment?.type,
+          attachment_size: attachment?.size,
         };
 
         // Marquer ce message comme envoyé pour éviter les doublons
@@ -117,6 +122,7 @@ export const useWebSocket = () => {
             content,
             receiver_id: selectedContact.id,
             timestamp,
+            attachment,
           }),
         );
         return true;

@@ -1,10 +1,12 @@
-import { MessageSquare, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { getImageUrl } from "@/lib/imageUtils";
 import { Button } from "./ui/button";
 import { useChatStore } from "@/store/chatStore";
 import { useEffect, useState } from "react";
 
 export const ChatHeader = () => {
-  const { isConnected } = useChatStore();
+  const { isConnected, selectedContact } = useChatStore();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -27,14 +29,19 @@ export const ChatHeader = () => {
   };
 
   return (
-    <div className="border-b bg-card">
+    <div className="border-b bg-card/70 backdrop-blur">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </div>
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={getImageUrl(selectedContact?.profile_photo)} />
+            <AvatarFallback>
+              {selectedContact?.username?.charAt(0).toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <h1 className="text-lg font-semibold">Chat IA</h1>
+            <h1 className="text-lg font-semibold">
+              {selectedContact?.username || "Chat IA"}
+            </h1>
             <div className="flex items-center gap-2">
               <div
                 className={`h-2 w-2 rounded-full ${

@@ -102,7 +102,7 @@ export const ContactList = () => {
   };
 
   return (
-    <div className="w-80 border-r bg-background flex flex-col h-full">
+    <div className="w-80 border-r bg-card/80 backdrop-blur flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between">
         <button
@@ -151,13 +151,13 @@ export const ContactList = () => {
             Aucun contact disponible
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="space-y-1 p-2">
             {contacts.map((contact) => (
               <button
                 key={contact.id}
                 onClick={() => setSelectedContact(contact)}
-                className={`w-full p-4 flex items-center gap-3 hover:bg-accent transition-colors ${
-                  selectedContact?.id === contact.id ? "bg-accent" : ""
+                className={`w-full p-3 flex items-center gap-3 rounded-2xl hover:bg-accent/70 transition-colors ${
+                  selectedContact?.id === contact.id ? "bg-accent shadow-sm" : ""
                 }`}
               >
                 <div className="relative">

@@ -115,7 +115,7 @@ export const ProfileEdit = ({ onClose }: ProfileEditProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6">
+      <div className="bg-card rounded-3xl shadow-2xl shadow-primary/20 max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold">Modifier le profil</h2>
           <Button variant="ghost" size="icon" onClick={onClose}>

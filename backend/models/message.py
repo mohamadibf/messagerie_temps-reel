@@ -43,3 +43,7 @@ class MessageResponse(BaseModel):
     username: Optional[str] = None
     profile_photo: Optional[str] = None
     is_read: bool = False
+    attachment_url: Optional[str] = None
+    attachment_name: Optional[str] = None
+    attachment_type: Optional[str] = None
+    attachment_size: Optional[int] = None

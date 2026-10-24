@@ -52,7 +52,7 @@ export const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-accent via-background to-primary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">💬 Messagerie</h1>
@@ -103,7 +103,7 @@ export const Auth = () => {
           </div>
 
           {error && (
-            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded">
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-2xl">
               {error}
             </div>
           )}

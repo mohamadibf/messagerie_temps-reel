@@ -215,6 +215,34 @@ async def upload_profile_photo(file: UploadFile = File(...)):
     return {"filename": f"/uploads/{unique_filename}"}
 
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 Mo
+
+
+@app.post("/upload/file")
+async def upload_file(
+    file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
+):
+    """Upload d'une pièce jointe pour un message"""
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Fichier trop volumineux (10 Mo maximum)",
+        )
+
+    original_name = Path(file.filename or "fichier").name
+    extension = Path(original_name).suffix.lower()[:10]
+    unique_filename = f"{uuid.uuid4()}{extension}"
+    (UPLOADS_DIR / unique_filename).write_bytes(content)
+
+    return {
+        "url": f"/uploads/{unique_filename}",
+        "name": original_name,
+        "type": file.content_type or "application/octet-stream",
+        "size": len(content),
+    }
+
+
 # === ENDPOINTS AUTHENTIFICATION ===
 
 
@@ -366,8 +394,18 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, token: str = No
             receiver_id = message_data.get("receiver_id")
             content = message_data.get("content", "")
 
+            attachment = message_data.get("attachment")
+            if not (
+                isinstance(attachment, dict)
+                and str(attachment.get("url", "")).startswith("/uploads/")
+            ):
+                attachment = None
+
+            if not content and not attachment:
+                continue
+
             # Enregistrer le message en base de données
-            message_id = db.save_message(content, user_id, receiver_id)
+            message_id = db.save_message(content, user_id, receiver_id, attachment)
 
             # Obtenir les infos de l'expéditeur
             sender = db.get_user_by_id(user_id)
@@ -382,6 +420,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, token: str = No
                 "username": sender["username"],
                 "profile_photo": sender.get("profile_photo"),
                 "type": "message",
+                "attachment_url": attachment.get("url") if attachment else None,
+                "attachment_name": attachment.get("name") if attachment else None,
+                "attachment_type": attachment.get("type") if attachment else None,
+                "attachment_size": attachment.get("size") if attachment else None,
             }
 
             # Envoyer au destinataire s'il est connecté

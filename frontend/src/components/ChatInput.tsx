@@ -1,11 +1,22 @@
-import { useState } from "react";
-import { Send, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  FileText,
+  Loader2,
+  Paperclip,
+  Send,
+  Smile,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { EmojiPicker } from "./EmojiPicker";
 import { useChatStore } from "@/store/chatStore";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { refineMessage, suggestMessage } from "@/services/api";
+import { refineMessage, suggestMessage, uploadFile } from "@/services/api";
 import { cn } from "@/lib/utils";
+import type { Attachment } from "@/types";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export const ChatInput = () => {
   const {
@@ -18,19 +29,78 @@ export const ChatInput = () => {
   } = useChatStore();
   const { sendMessage, isConnected } = useWebSocket();
   const [isAILoading, setIsAILoading] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
+
+  // Fermer le sélecteur d'emojis au clic extérieur
+  useEffect(() => {
+    if (!showEmojis) return;
+    const onClick = (e: MouseEvent) => {
+      if (!emojiRef.current?.contains(e.target as Node)) setShowEmojis(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showEmojis]);
+
+  const canSend =
+    (inputValue.trim().length > 0 || attachment !== null) &&
+    isConnected &&
+    !isAILoading &&
+    !isUploading;
 
   const handleSend = () => {
-    if (!inputValue.trim() || !isConnected) return;
+    if (!canSend) return;
 
-    sendMessage(inputValue.trim());
+    sendMessage(inputValue.trim(), attachment ?? undefined);
     setInputValue("");
+    setAttachment(null);
     setSuggestions([]);
+    setShowEmojis(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    const start = input?.selectionStart ?? inputValue.length;
+    const end = input?.selectionEnd ?? inputValue.length;
+    setInputValue(inputValue.slice(0, start) + emoji + inputValue.slice(end));
+    requestAnimationFrame(() => {
+      input?.focus();
+      input?.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setUploadError(null);
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError("Fichier trop volumineux (10 Mo maximum)");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      setAttachment(await uploadFile(file));
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "Échec de l'envoi du fichier",
+      );
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -75,56 +145,131 @@ export const ChatInput = () => {
   };
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="bg-transparent px-4 pb-4 pt-2">
       <div className="max-w-4xl mx-auto space-y-2">
         {/* Bulles de suggestions */}
         {suggestions.length > 0 && (
           <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2">
             {suggestions.map((suggestion, index) => (
-              <button
+              <div
                 key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className="group relative inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-sm transition-all hover:scale-105"
+                className="group inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm text-primary transition-all hover:bg-primary/20"
               >
-                <Sparkles className="h-3 w-3" />
-                <span className="max-w-md truncate">{suggestion}</span>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeSuggestion(index);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="inline-flex items-center gap-2"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span className="max-w-md truncate">{suggestion}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeSuggestion(index)}
+                  className="opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label="Retirer la suggestion"
                 >
                   <X className="h-3 w-3" />
                 </button>
-              </button>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Champ de saisie */}
-        <div className="flex items-end gap-2">
-          <div className="flex-1 relative">
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder={
-                isConnected
-                  ? "Écrivez votre message..."
-                  : "En attente de connexion..."
-              }
-              disabled={!isConnected || isAILoading}
-              className="pr-12 resize-none"
-            />
+        {/* Pièce jointe en attente */}
+        {(attachment || isUploading || uploadError) && (
+          <div className="animate-in fade-in flex items-center gap-2">
+            {isUploading && (
+              <span className="inline-flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Envoi du fichier…
+              </span>
+            )}
+            {attachment && (
+              <span className="inline-flex max-w-xs items-center gap-2 rounded-2xl bg-primary/10 px-3 py-2 text-xs text-primary">
+                <FileText className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{attachment.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachment(null)}
+                  aria-label="Retirer le fichier"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            )}
+            {uploadError && (
+              <span className="rounded-2xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {uploadError}
+              </span>
+            )}
           </div>
+        )}
+
+        {/* Champ de saisie */}
+        <div className="relative flex items-center gap-1 rounded-full border bg-card p-1.5 shadow-lg shadow-primary/5">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+            data-testid="file-input"
+          />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="rounded-full text-muted-foreground"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!isConnected || isUploading}
+            title="Joindre un fichier"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+
+          <div ref={emojiRef} className="relative">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-muted-foreground"
+              onClick={() => setShowEmojis((v) => !v)}
+              disabled={!isConnected}
+              title="Emojis"
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+            {showEmojis && (
+              <div className="absolute bottom-12 left-0 z-20">
+                <EmojiPicker onSelect={insertEmoji} />
+              </div>
+            )}
+          </div>
+
+          <input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder={
+              isConnected
+                ? "Écrivez votre message..."
+                : "En attente de connexion..."
+            }
+            disabled={!isConnected || isAILoading}
+            className="h-9 min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          />
 
           <Button
             onClick={handleAIClick}
             disabled={!isConnected || isAILoading}
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className={cn("transition-all", isAILoading && "animate-pulse")}
+            className={cn(
+              "rounded-full text-primary transition-all",
+              isAILoading && "animate-pulse",
+            )}
             title={
               inputValue.trim() ? "Améliorer le message" : "Suggérer un message"
             }
@@ -134,8 +279,10 @@ export const ChatInput = () => {
 
           <Button
             onClick={handleSend}
-            disabled={!inputValue.trim() || !isConnected || isAILoading}
+            disabled={!canSend}
             size="icon"
+            className="rounded-full shadow-md shadow-primary/30"
+            title="Envoyer"
           >
             <Send className="h-4 w-4" />
           </Button>

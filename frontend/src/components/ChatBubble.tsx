@@ -1,3 +1,4 @@
+import { Download, FileText } from "lucide-react";
 import type { Message } from "@/store/chatStore";
 import { useChatStore } from "@/store/chatStore";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -8,9 +9,27 @@ interface ChatBubbleProps {
   message: Message;
 }
 
+const formatSize = (bytes?: number | null) => {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+};
+
+// Message composé uniquement d'emojis (1 à 3) : affiché en grand, sans bulle
+const EMOJI_ONLY =
+  /^(?:\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*){1,3}$/u;
+
 export const ChatBubble = ({ message }: ChatBubbleProps) => {
   const { currentUser } = useChatStore();
   const isCurrentUser = message.sender_id === currentUser?.id;
+
+  const attachmentUrl = message.attachment_url
+    ? getImageUrl(message.attachment_url)
+    : null;
+  const isImage = !!message.attachment_type?.startsWith("image/");
+  const isBigEmoji =
+    !attachmentUrl && EMOJI_ONLY.test(message.content.trim());
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -19,6 +38,17 @@ export const ChatBubble = ({ message }: ChatBubbleProps) => {
       minute: "2-digit",
     });
   };
+
+  const time = (
+    <span
+      className={cn(
+        "text-[11px] mt-1 block opacity-60",
+        isCurrentUser ? "text-right" : "text-left",
+      )}
+    >
+      {formatTime(message.timestamp)}
+    </span>
+  );
 
   return (
     <div
@@ -37,23 +67,62 @@ export const ChatBubble = ({ message }: ChatBubbleProps) => {
       )}
       <div
         className={cn(
-          "max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm",
-          isCurrentUser
-            ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-secondary text-secondary-foreground rounded-bl-sm",
+          "max-w-[70%]",
+          isBigEmoji
+            ? "px-1"
+            : cn(
+                "rounded-3xl px-4 py-2.5 shadow-sm",
+                isCurrentUser
+                  ? "bg-linear-to-br from-primary to-primary/80 text-primary-foreground rounded-br-lg shadow-primary/20"
+                  : "bg-card text-card-foreground border rounded-bl-lg",
+              ),
         )}
       >
-        <p className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-          {message.content}
-        </p>
-        <span
-          className={cn(
-            "text-xs mt-1 block opacity-70",
-            isCurrentUser ? "text-right" : "text-left",
-          )}
-        >
-          {formatTime(message.timestamp)}
-        </span>
+        {attachmentUrl && isImage && (
+          <a href={attachmentUrl} target="_blank" rel="noreferrer">
+            <img
+              src={attachmentUrl}
+              alt={message.attachment_name || "Image"}
+              className="mb-1 max-h-64 rounded-2xl object-cover"
+            />
+          </a>
+        )}
+        {attachmentUrl && !isImage && (
+          <a
+            href={attachmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            download={message.attachment_name || undefined}
+            className={cn(
+              "mb-1 flex items-center gap-3 rounded-2xl px-3 py-2 transition-colors",
+              isCurrentUser
+                ? "bg-white/15 hover:bg-white/25"
+                : "bg-muted hover:bg-muted/70",
+            )}
+          >
+            <FileText className="h-8 w-8 shrink-0 opacity-80" />
+            <span className="min-w-0 flex-1">
+              <span className="block max-w-48 truncate text-sm font-medium">
+                {message.attachment_name || "Fichier"}
+              </span>
+              <span className="block text-xs opacity-70">
+                {formatSize(message.attachment_size)}
+              </span>
+            </span>
+            <Download className="h-4 w-4 shrink-0 opacity-70" />
+          </a>
+        )}
+        {message.content && (
+          <p
+            className={cn(
+              "leading-relaxed wrap-break-word whitespace-pre-wrap",
+              isBigEmoji ? "text-5xl" : "text-sm",
+            )}
+          >
+            {message.content}
+          </p>
+        )}
+        {time}
       </div>
       {isCurrentUser && (
         <Avatar className="h-8 w-8 mt-1">

@@ -1,3 +1,5 @@
+import type { Attachment } from "@/types";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // Helper pour obtenir le token depuis le localStorage
@@ -82,4 +84,23 @@ export const suggestMessage = async (
       error: "Failed to suggest",
     };
   }
+};
+
+export const uploadFile = async (file: File): Promise<Attachment> => {
+  const token = getAuthToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/upload/file`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail || "Échec de l'envoi du fichier");
+  }
+
+  return response.json();
 };

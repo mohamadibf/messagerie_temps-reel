@@ -15,6 +15,17 @@ export interface Message {
   username?: string;
   profile_photo?: string;
   is_read?: boolean;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  attachment_type?: string | null;
+  attachment_size?: number | null;
+}
+
+export interface Attachment {
+  url: string;
+  name: string;
+  type: string;
+  size: number;
 }
 
 export interface AuthResponse {

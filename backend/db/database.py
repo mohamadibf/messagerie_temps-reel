@@ -68,6 +68,18 @@ class Database:
         """
         )
 
+        # Migration : colonnes de pièce jointe
+        cursor.execute("PRAGMA table_info(messages)")
+        existing = {row["name"] for row in cursor.fetchall()}
+        for column, ddl in (
+            ("attachment_url", "TEXT"),
+            ("attachment_name", "TEXT"),
+            ("attachment_type", "TEXT"),
+            ("attachment_size", "INTEGER"),
+        ):
+            if column not in existing:
+                cursor.execute(f"ALTER TABLE messages ADD COLUMN {column} {ddl}")
+
         conn.commit()
         conn.close()
 
@@ -216,7 +228,11 @@ class Database:
     # === OPÉRATIONS MESSAGES ===
 
     def save_message(
-        self, content: str, sender_id: int, receiver_id: Optional[int] = None
+        self,
+        content: str,
+        sender_id: int,
+        receiver_id: Optional[int] = None,
+        attachment: Optional[Dict] = None,
     ) -> int:
         """Enregistrer un message en base de données"""
         conn = self.get_connection()
@@ -224,10 +240,21 @@ class Database:
 
         cursor.execute(
             """
-            INSERT INTO messages (content, sender_id, receiver_id)
-            VALUES (?, ?, ?)
+            INSERT INTO messages (
+                content, sender_id, receiver_id,
+                attachment_url, attachment_name, attachment_type, attachment_size
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-            (content, sender_id, receiver_id),
+            (
+                content,
+                sender_id,
+                receiver_id,
+                attachment.get("url") if attachment else None,
+                attachment.get("name") if attachment else None,
+                attachment.get("type") if attachment else None,
+                attachment.get("size") if attachment else None,
+            ),
         )
 
         message_id = cursor.lastrowid
