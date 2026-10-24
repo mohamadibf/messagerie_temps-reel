@@ -17,6 +17,14 @@ const formatSize = (bytes?: number | null) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 };
 
+// Seuls ces formats sont affichés en image (SVG exclu : peut contenir des scripts)
+const DISPLAYABLE_IMAGES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+]);
+
 // Message composé uniquement d'emojis (1 à 3) : affiché en grand, sans bulle
 const EMOJI_ONLY =
   /^(?:\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic})*){1,3}$/u;
@@ -30,7 +38,7 @@ export const ChatBubble = memo(function ChatBubble({
   const attachmentUrl = message.attachment_url
     ? getImageUrl(message.attachment_url)
     : null;
-  const isImage = !!message.attachment_type?.startsWith("image/");
+  const isImage = DISPLAYABLE_IMAGES.has(message.attachment_type ?? "");
   const isBigEmoji =
     !attachmentUrl && EMOJI_ONLY.test(message.content.trim());
 

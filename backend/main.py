@@ -140,6 +140,20 @@ async def get_current_user(Authorization: Optional[str] = Header(None)) -> dict:
 # Inclure les routeurs
 app.include_router(ai_router)
 
+# Extensions affichables en ligne ; tout le reste (SVG, HTML...) est forcé en téléchargement
+INLINE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+
+
+@app.middleware("http")
+async def secure_uploads(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/uploads/"):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        if Path(request.url.path).suffix.lower() not in INLINE_EXTENSIONS:
+            response.headers["Content-Disposition"] = "attachment"
+    return response
+
+
 # Servir les fichiers uploadés
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
